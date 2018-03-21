@@ -1,0 +1,42 @@
+[
+    {
+        "release":"1.2.2",
+        "date":"2/16/18",
+        "notes":"-Made the Terms of Use link display the Terms of Use<br>-Added new section 'How Does This Work?' to Program Information"
+    },
+    {
+        "release":"1.2.1",
+        "date":"2/10/18",
+        "notes":"-Made the 'Program Information' link in the footer actually display program information... Terms of Use is next"
+    },
+    {
+        "release":"1.2.0",
+        "date":"2/7/18",
+        "notes":"-Added 'Fallacies' section to results box"
+    },
+    {
+        "release":"1.1.2",
+        "date":"2/5/18",
+        "notes":"-Fixed a really annoying error where Illicit Minor & Major fallacies were slipping through my checking system<br>-Nearly ready to release a visual display of fallacies"
+    },
+    {
+        "release":"1.1.1",
+        "date":"2/5/18",
+        "notes":"-Changed some fonts & font sizes"
+    },
+    {
+        "release":"1.1.0",
+        "date":"2/3/18",
+        "notes":"-Added internal tracking of fallacies<br>-Added quality/quantity values to statements"
+    },
+    {
+        "release":"1.0.2",
+        "date":"2/2/18",
+        "notes":"-Polished up some stuff"
+    },
+    {
+        "release":"1.0.0",
+        "date":"1/31/18",
+        "notes":"-Initial release"
+    }
+]

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Logic Projcet | glassintel.com</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=PT+Sans:400,700');
+        .statement {
+            display: block;
+            margin: 10px;
+            width: 300px;
+            height: auto;
+            font-size: 26px;
+            font-family: 'PT Sans', sans-serif;
+        }
+        .submit {
+            width: 200px;
+            height: 35px;
+            font-size: 20px;
+        }
+        .hzbar {
+          overflow: hidden;
+          text-align: center;
+          font-family: 'PT Sans', sans-serif;
+        }
+
+        .hzbar:before,
+        .hzbar:after {
+          background-color: #000;
+          content: "";
+          display: inline-block;
+          height: 1px;
+          position: relative;
+          vertical-align: middle;
+          width: 50%;
+        }
+
+        .hzbar:before {
+          right: 0.5em;
+          margin-left: -50%;
+        }
+
+        .hzbar:after {
+          left: 0.5em;
+          margin-right: -50%;
+        }
+        #result-box {
+            margin: 10px;
+            width: 550px;
+            height: 260px;
+            border: 2px solid black;
+            border-radius: 5px;
+        }
+        #results .analytics {
+            margin-top: 20px;
+            font-family: 'PT Sans', sans-serif;
+            font-size: 26px;
+            line-height: 35px;
+        }
+        #results .fallacy.text{
+            font-family: 'PT Sans', sans-serif;
+            font-size: 20px;
+            line-height: 20px;
+            text-align: left;
+            margin-left: 7px;
+        }
+        #submit-box h1 {
+            margin: 0px;
+            font-family: 'PT Sans', sans-serif;
+            font-weight: 700;
+            font-size: 40px;
+        }
+        img {
+            display: inline;
+        }
+        .fallacy.image.true {
+            margin-top: -11px;
+            float: right;
+            width: 50px;
+            height: auto;
+            transform: scale(0.6);
+        }
+        .fallacy.image.false {
+            margin-right: -5px;
+            margin-top: -15px;
+            float: right;
+            transform: scale(0.6);
+        }
+        #pi {
+            width: 800px;
+            font-size: 18px;
+        }
+        #return {
+            float: left;
+            padding: 10px;
+            width: 100px;
+            height: 60px;
+            background-color: rgb(255, 255, 0);
+            border: 3px rgb(201, 201, 5) solid;
+            border-radius: 3px;
+            font-size: 20px;
+            margin-left: 10px;
+        }
+        #return:hover {
+            background-color: rgb(245, 241, 0);
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper" align="center">
+            
+            <div id="submit-result-wrapper">
+        <div id="submit-box">
+            <h1>Enter Syllogism:</h1>
+            <form id="syl" action="javascript:void(0);" onsubmit="handleSubmit(this)">
+                <input name="statement1" class="statement" type="text" required placeholder="All M is P">
+                <input name="statement2" class="statement" type="text" required placeholder="All S is M">
+                <input name="statement3" class="statement" type="text" required placeholder="All S is P">
+                <input class="submit" type="submit" value="Analyze Statement">
+            </form>
+        </div>
+        <div id="result-box">
+            <div id="results">
+                
+            </div>
+        </div>
+    </div>
+    </div>
+    <div align ="center" id="footer">
+        <p id="bottomtext"><a href="javascript:displayProgramInformation();">Program Information</a><br>Questions? Suggestions? Contact elijah@glassintel.com<br>&copy; 2018 Elijah Olmos | By using this program you agree to the <a href="javascript:displayTermsOfUse();">Terms of Use</a></p>
+        
+    </div>
+    <script>
+        var vh;
+        var xobj = new XMLHttpRequest();
+            xobj.overrideMimeType("application/json");
+            xobj.open('GET', 'versionhistory.json', true); // Replace 'my_data' with the path to your file
+            xobj.onreadystatechange = function () {
+            if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            vh = JSON.parse(xobj.responseText);
+            }
+        }
+        xobj.send(null);
+        var tou;
+        var xobj2 = new XMLHttpRequest();
+            xobj2.overrideMimeType("application/json");
+            xobj2.open('GET', 'termsofuse.json', true); // Replace 'my_data' with the path to your file
+            xobj2.onreadystatechange = function () {
+            if (xobj2.readyState == 4 && xobj2.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            tou = JSON.parse(xobj2.responseText);
+            }
+        }
+        xobj2.send(null);
+        
+        let HTMLbase;
+        updateHTMLbase();
+        function updateHTMLbase() {
+            HTMLbase = document.getElementById('wrapper').innerHTML;
+        }
+        
+        const VALID_ARGUMENTS = [
+            "AAA-1",
+            "AAI-1",
+            "AII-1",
+            "AEE-2",
+            "AEO-2",
+            "AOO-2",
+            "AAI-3",
+            "AII-3",
+            "AAI-4",
+            "AEE-4",
+            "AEO-4",
+            "EAE-1",
+            "EAO-1",
+            "EIO-1",
+            "EAE-2",
+            "EAO-2",
+            "EIO-2",
+            "EAO-3",
+            "EIO-3",
+            "EAO-4",
+            "EIO-4",
+            "IAI-3",
+            "IAI-4",
+            "OAO-3"
+        ];
+        var syllogism = {
+            "premises":[],
+            "conclusion":{},
+            "majorterm":"",
+            "minorterm":"",
+            "middleterm":"",
+            "mood":"",
+            "figure":"",
+            "form":"",
+            "valid":"unknown",
+            "sound":"unknown", 
+            "fallacies":{
+                "Undistributed Middle":"unknown",
+                "Illicit Major":"unknown",
+                "Illicit Minor":"unknown",
+                "Two Negative Premises":"unknown",
+                "Negative Premise and an Affirmative Conclusion":"unknown",
+                "Two Affirmative Premises and a Negative Conclusion":"unknown",
+                "Existential Fallacy":"unknown"
+            },
+            "runAllCalculations": function() {
+                this.calculateTerms();
+                this.calculateFigure();
+                this.calculateMood();
+                this.calculateForm();
+                this.calculateValidity();
+                this.calculateFallacies();
+            },
+            "calculateTerms": function() { //requires premises and conclusion
+                        this.majorterm = this.conclusion.terms[1].name;
+                        this.minorterm = this.conclusion.terms[0].name;
+                        if(this.premises[0].terms[0].name == this.majorterm) this.middleterm = this.premises[0].terms[1].name;
+                        if(this.premises[0].terms[1].name == this.majorterm) this.middleterm = this.premises[0].terms[0].name;
+            },
+            "calculateFigure": function() { //requires premises, conclusion, majorterm, minorterm, middleterm
+                    var mpos1;
+                    var mpos2;
+                    switch(this.middleterm) {
+                        case this.premises[0].terms[0].name:
+                            mpos1 = "L";
+                            break;
+                        case this.premises[0].terms[1].name:
+                            mpos1 = "R";
+                            break;
+                        default: 
+                            console.log("error calculating figure #1A");
+                    }
+                    switch(this.middleterm) {
+                        case this.premises[1].terms[0].name:
+                            mpos2 = "L";
+                            break;
+                        case this.premises[1].terms[1].name:
+                            mpos2 = "R";
+                            break;
+                        default: 
+                            console.log("error calculating figure #1B");
+                    }
+                    if(mpos1 == "L" && mpos2 == "R") {
+                        this.figure = "1";
+                    } else if(mpos1 == "R" && mpos2 == "R") {
+                        this.figure = "2";
+                    } else if(mpos1 == "L" && mpos2 == "L") {
+                        this.figure = "3";
+                    } else if(mpos1 == "R" && mpos2 == "L") {
+                        this.figure = "4";
+                    } else console.log("error calculating figure #2");
+            },
+            "calculateMood": function() { //requires premises, conclusion
+                var type1 = this.premises[0].type,
+                type2 = this.premises[1].type,
+                type3 = this.conclusion.type;
+                var tempmood = type1 + type2 + type3;
+                var mood = tempmood.toString().trim();
+                this.mood = mood;
+            },
+            "calculateForm": function() { //requires mood, figure
+                var tempForm = this.mood.toString().trim() +"-" +this.figure.toString().trim();
+                var form = tempForm.toString().trim();
+                this.form = form;
+            },
+            "calculateValidity": function() { //requires form + validArguments constant
+                for(var i = 0; i < VALID_ARGUMENTS.length; i++) {
+                    if(this.form == VALID_ARGUMENTS[i]) {
+                        this.valid = true;
+                        break;
+                    } else if(this.form != VALID_ARGUMENTS[i]) {
+                        this.valid = false;
+                    }
+                }
+            },
+            "calculateSoundness": function() {
+                //use AI to see if statement is true?
+            },
+            "calculateFallacies": function() { //require 
+                var udMid, illicitMaj, illicitMin, twoNegPrem, oneNegPremAffirmConc, twoAffirmPremNegConc, exFallacy;
+                var p1, p2, c;
+                p1 = this.premises[0];
+                p2 = this.premises[1];
+                c = this.conclusion;
+                //calculate Undistributed Middle
+                if(p1.terms[0].name == this.middleterm) { //if p1 first term is middleterm
+                    if(p1.terms[0].distributed) udMid = false;
+                } else if(p1.terms[1].name == this.middleterm) { //if p1 second term is middleterm
+                    if(p1.terms[0].distributed) udMid = false; //and it is distributed
+                } else if(p2.terms[0].name == this.middleterm) { //if p2 first term is middleterm
+                    if(p2.terms[0].distributed) udMid = false; //and it is distributed
+                } else if(p2.terms[1].name == this.middleterm) { //if p2 second term is middleterm
+                    if(p2.terms[1].distributed) udMid = false; //and it is distributed
+                } else udMid = true;
+
+                //calculate illicitMaj
+                if(p1.terms[0].name == this.majorterm) {                    //if p1 first term is majorterm
+                    if(p1.terms[0].distributed) illicitMaj = false;     
+                    else if(!p1.terms[0].distributed) illicitMaj = true;    //or, if it's not distributed
+                } else if(p1.terms[1].name == this.majorterm) {             //if p1 second term is majorterm
+                    if(p1.terms[1].distributed) illicitMaj = false;         //and it is distributed
+                    else if(!p1.terms[1].distributed) illicitMaj = true;    //or, if it's not distributed
+                } else if(p2.terms[0].name == this.majorterm) {             //if p2 first term is majorterm
+                    if(p2.terms[0].distributed) illicitMaj = false;         //and it is distributed
+                    else if(!p2.terms[0].distributed) illicitMaj = true;    //or, if it's not distributed
+                } else if(p2.terms[1].name == this.majorterm) {             //if p2 second term is majorterm
+                    if(p2.terms[1].distributed) illicitMaj = false;         //and it is distributed
+                    else if(!p2.terms[1].distributed) illicitMaj = true;    //or, if it's not distributed
+                } else illicitMaj = true;
+
+                //calculate illicitMin
+                if(p1.terms[0].name == this.minorterm) {                    //if p1 first term is minorterm
+                    if(p1.terms[0].distributed) illicitMin = false;     
+                    else if(!p1.terms[0].distributed) illicitMin = true;    //or, if it's not distributed
+                } else if(p1.terms[1].name == this.minorterm) {             //if p1 second term is minorterm
+                    if(p1.terms[1].distributed) illicitMin = false;         //and it is distributed
+                    else if(!p1.terms[1].distributed) illicitMin = true;    //or, if it's not distributed
+                } else if(p2.terms[0].name == this.minorterm) {             //if p2 first term is minorterm
+                    if(p2.terms[0].distributed) illicitMin = false;         //and it is distributed
+                    else if(!p2.terms[0].distributed) illicitMin = true;    //or, if it's not distributed
+                } else if(p2.terms[1].name == this.minorterm) {             //if p2 second term is minorterm
+                    if(p2.terms[1].distributed) illicitMin = false;         //and it is distributed
+                    else if(!p2.terms[1].distributed) illicitMin = true;     //or, if it's not distributed
+                } else illicitMin = true;
+
+                //calculate twoNegativePrem
+                /* OLD CODE
+                if(p1.type == 'E' && p2.type == 'E') twoNegPrem = true; //if both premises are negative
+                else if(p1.type == 'E' && p2.type == 'O') twoNegPrem = true; //if both premises are negative
+                else if(p1.type == 'O' && p2.type == 'E') twoNegPrem = true; //if both premises are negative
+                else if(p1.type == 'O' && p2.type == 'O') twoNegPrem = true; //if both premises are negative
+                else twoNegPrem = false; */
+                if(p1.quality == 'negative' && p2.quality == 'negative') twoNegPrem = true;
+                else twoNegPrem = false;
+
+                //calculate oneNegPremAffirmConc
+                /* OLD CODE
+                if(p1.type == 'E' || p1.type == 'O' || p2.type == 'E' || p2.type == 'O') { //if any of premises are negative
+                    if(c.type == 'A' || c.type == 'I') oneNegPremAffirmConc = true; //if conclusion is positive
+                } else oneNegPremAffirmConc = false; */
+                if(c.quality == 'positive') {
+                    if(p1.quality == 'negative' || p2.quality == 'negative') oneNegPremAffirmConc = true; //if any premise is negative
+                    else oneNegPremAffirmConc = false;
+                } else oneNegPremAffirmConc = false;
+
+                //calculate twoAffirmPremNegConc
+                /* OLD CODE
+                if(c.type == 'E' || c.type == 'O') { //if conclusion is negative
+                    if(p1.type == 'A' && p2.type == 'A') twoAffirmPremNegConc = true; //if both premises are positive
+                    else if(p1.type == 'A' && p2.type == 'I') twoAffirmPremNegConc = true; //if both premises are positive
+                    else if(p1.type == 'I' && p2.type == 'A') twoAffirmPremNegConc = true; //if both premises are positive
+                    else if(p1.type == 'I' && p2.type == 'I') twoAffirmPremNegConc = true; //if both premises are positive
+                    else twoAffirmPremNegConc = false;
+                } else twoAffirmPremNegConc = false; */
+                if(c.quality == 'negative') {
+                    if(p1.quality == 'positive' && p2.quality == 'positive') twoAffirmPremNegConc = true;
+                    else twoAffirmPremNegConc = false;
+                } else twoAffirmPremNegConc = false;
+
+                //calculate exFallacy
+                if(p1.quantity == 'universal' && p2.quantity == 'universal' && c.quantity == 'particular') exFallacy = true;
+                else exFallacy = false;
+                
+                //update syllogism to reflect fallacy values
+                this.fallacies['Undistributed Middle'] = udMid,
+                this.fallacies['Illicit Major'] = illicitMaj,
+                this.fallacies['Illicit Minor'] = illicitMin,
+                this.fallacies['Two Negative Premises'] = twoNegPrem,
+                this.fallacies['Negative Premise and an Affirmative Conclusion'] = oneNegPremAffirmConc,
+                this.fallacies['Two Affirmative Premises and a Negative Conclusion'] = twoAffirmPremNegConc,
+                this.fallacies['Existential Fallacy'] = exFallacy;
+            }   
+        };
+
+        function returnToProgram() {
+            document.getElementById('wrapper').innerHTML = HTMLbase;
+        }
+
+        function displayTermsOfUse() {
+            var newbasehtml = `
+            <div id="tou-wrapper">
+                <div id="return" onclick="javascript:returnToProgram()">
+                <p>Back</p>
+                </div>
+            </div>
+            `;
+            document.getElementById('wrapper').innerHTML = newbasehtml;
+            var newHTML = `
+            <div id='tou'>
+                <h1>Terms of Use</h1>
+                <p>${tou.text}</p>
+            </div>
+            `;
+            document.getElementById('tou-wrapper').innerHTML = newHTML;
+        }
+         
+        function displayProgramInformation() {
+            var newbasehtml = `
+            <div id="pi-wrapper">
+                <div id="return" onclick="javascript:returnToProgram()">
+                <p>Back</p>
+                </div>
+            </div>
+            `;
+            document.getElementById('wrapper').innerHTML = newbasehtml;
+            var currentv = vh[0].release;
+            var newHTML = `
+            <div id="pi">
+                <h1>Purpose</h1>
+                <p>I made this program in my spare time. I don't charge a fee for its use, nor do I plan on doing so. This is supposed to a simple and convenient way to analyze a syllogism and get quick results.</p>
+                <h1>How Does This Work?</h1>
+                <p>That's a good question. I start off by defining a syllogism "template" object which gets updated when the "analyze statement" button is clicked. When that button is clicked, I run a series of functions which analyzes the input received, internally updates values, then displays it nicely for you to see. You may be wondering about how I can figure out stuff like the statement types, syllogism moods, fallacies, and whatnot. Well, I can figure out the type of statement by looking at the first word. If the first word is "some", I look to see if the word "not" is located in the same statement. Then I simply update my syllogism object with the type of each statement. Once I have the type, I just split the statement at the being verb, take the first half and stick it into a "statement terms" array. Same thing with the second half. That repeats for each statement. To figure out the middle term, I compare the terms from the first statement to the terms of the conclusion. Whichever term is not in the conclusion is the middle term. I can track the path of the middle term relative to the first two statements using my "statement terms" array and determine the figure. I combine the figure with the mood to get the form. As far as fallacies go, that is a bit more complicated. I had to add new quality/quantity values to each statement within my syllogism object. I also had to add whether or not a statement's term was distributed. I can figure that out based on the type of statement (which we already established). From there, I run a multitude of formal fallacies tests to figure out which fallcies are present. I log the values in an object inside my main syllogism obkect. Once every fallacy has been found, I take the value of each fallacy and find the coresponding image, put that into a newhtml variable, then set the internalHTML of an element as that variable.</p>
+                <h1>Technical Stuff</h1>
+                <p>I coded this program with HTML5, CSS3, and vanilla javascript. No jQuery! No PHP, either. The latest version (which should be running right now) is v${currentv}. For additional questions, contact me using my contact page or the information provided in the footer.<br><details id="vh"><summary>Version History</summary></details></p>
+            </div>
+            `;
+            document.getElementById('pi-wrapper').innerHTML += newHTML;
+            var vhHTML = ``;
+            for(var i = 0; i < vh.length; i++) {
+                console.log(vh[i].release);
+                vhHTML += `
+                <details> 
+                <summary>${vh[i].release}</summary>
+                <p>${vh[i].notes}</p>
+                </details>
+                `;
+            }
+            document.getElementById('vh').innerHTML += vhHTML;
+        }
+
+        function handleSubmit(form) {
+            syllogism.premises.length = 0;
+            var p1 = form.statement1.value;
+            var p2  = form.statement2.value;
+            var p3  = form.statement3.value;
+
+            statementConverter(p1, "premises");
+            statementConverter(p2, "premises");
+            statementConverter(p3, "conclusion");
+            syllogism.runAllCalculations();
+            displayResults();
+            console.log(syllogism);
+        }
+
+        function displayResults() {
+            var newhtml = `
+            <p class="analytics">
+                Form: ${syllogism.form}<br>
+                Major Term: ${syllogism.majorterm}<br>
+                Minor Term: ${syllogism.minorterm}<br>
+                Middle Term: ${syllogism.middleterm}<br>
+                Valid: ${syllogism.valid}
+            </p>
+            <h1 class="hzbar">Fallacies</h1>
+            `;
+            document.getElementById('results').innerHTML = newhtml;
+            displayFallacies();
+            
+            document.getElementById('result-box').style.height = "560px";
+        }
+
+        function displayFallacies() {
+            try {
+            var newhtml = `
+            `;
+            var keylist = Object.keys(syllogism.fallacies);
+            for(var i =0; i < keylist.length; i++) {
+                newhtml += `
+                <p class="fallacy text"><img class="fallacy image ${syllogism.fallacies[keylist[i]]}" src="../../../images/${syllogism.fallacies[keylist[i]]}.png">${keylist[i]}</p>
+                `;
+            }
+            document.getElementById('results').innerHTML += newhtml;
+            console.log(newhtml);
+            } catch(err) {
+                console.log(err);
+            }
+            
+        }
+
+        function statementConverter(statement1, PremOrConc) {
+            var statement = statement1.toLowerCase().trim(); //get rid of whitespace
+            //see what type of statement we are dealing with
+            var type = determineType(statement);
+            var determiner;
+            if(statement.includes("is")) determiner = "is";
+            if(statement.includes("are")) determiner = "are";
+            var phrase1 = statement.split(determiner)[0];
+            var predicate1 = statement.split(determiner)[1].trim();
+            var predicate = predicate1.replace("not", "").trim();
+            var subject = phrase1.split(" ").slice(1).join(" ").trim();
+            var quantity = determineQuantity(type);
+            var quality = determineQuality(type);
+            var distributedstatus = new determineDistribution(type);
+            if(PremOrConc == "premises") {
+                syllogism.premises.push({
+                    "textOriginal": statement1,
+                    "text": statement,
+                    "type": type,
+                    "quantity": quantity,
+                    "quality": quality,
+                    "terms": [
+                        {
+                            "name":subject,
+                            "distributed":distributedstatus.subject
+                        },
+                        {
+                            "name":predicate,
+                            "distributed":distributedstatus.predicate
+                        }
+                    ]
+                });
+            } else if(PremOrConc == "conclusion") {
+                syllogism.conclusion = {
+                    "textOriginal": statement1,
+                    "text": statement,
+                    "type": type,
+                    "quantity": quantity,
+                    "quality": quality,
+                    "terms": [
+                    {
+                        "name":subject,
+                        "distributed":distributedstatus.subject
+                    },
+                    {
+                        "name":predicate,
+                        "distributed":distributedstatus.predicate
+                    }
+                    ]                                        
+                }
+            }
+        }
+        function determineQuantity(type) {
+            if(type == 'A' || type == 'E') return "universal"
+            else if(type == 'I' || type == 'O') return "particular"
+            else return "unknown"
+        }
+        function determineQuality(type) {
+            if(type == 'A' || type == 'I') return "positive"
+            else if(type == 'E' || type == 'O') return "negative"
+            else return "unknown"
+        }
+        function determineDistribution(type) {
+            if(type == 'E') {
+                this.subject = true, this.predicate = true;
+            } else if(type == 'I') {
+                this.subject = false, this.predicate = false;
+            } else if(type == 'A') {
+                this.subject = true, this.predicate = false;
+            } else if(type == 'O') {
+                this.subject = false, this.predicate = true;
+            }
+        }
+        function determineType(s) {
+            if(s.startsWith("all")) return "A";
+            if(s.startsWith("no")) return "E";
+            if(s.startsWith("some")) {
+                if(s.includes("not")) {
+                    return "O";
+                } else return "I"; 
+            }
+        }
+    </script>
+</body>
+</html>
